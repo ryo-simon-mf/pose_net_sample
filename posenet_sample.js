@@ -1,4 +1,4 @@
-/*
+/** 
 * @license
 * Copyright Copyright 2018 Google Inc. All Rights Reserved.
 * Apache License Version 2.0（「本ライセンス」）に基づいてライセンスされます。
@@ -12,12 +12,7 @@
 * いかなる保証も条件もなしに「現状のまま」頒布されます。
 * 本ライセンスでの権利と制限を規定した文言については、本ライセンスを参照してください。
 */
-/* このプログラムは
-* https://github.com/tensorflow/tfjs-models/tree/master/posenet/demos
-* および
-* https://github.com/tensorflow/tfjs-models/blob/master/posenet/demos/camera.js
-* をもとに作成しました。
-*/
+
 const imageScaleFactor = 0.2;
 const outputStride = 16;
 const flipHorizontal = false;
