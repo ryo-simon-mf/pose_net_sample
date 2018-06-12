@@ -20,6 +20,7 @@
 * をもとに作成しました。
 */
 
+
 const imageScaleFactor = 0.2;
 const outputStride = 16;
 const flipHorizontal = false;
@@ -28,8 +29,15 @@ const contentWidth = 800;
 const contentHeight = 600;
 const ballNum = 2;
 const colors = ["red","blue","green"];
+const fontLayout = "bold 50px Arial";
 
 let balls = [];
+let score = 0;
+let timeLimit = 200;
+let printLimit = timeLimit / 10;
+let naviko = new Image();
+let navScale = 1
+naviko.src = "naviko.png"
 balls = initBalls(ballNum);
 bindPage();
 
@@ -87,15 +95,39 @@ function detectPoseInRealTime(video, net) {
         ctx.save();
         ctx.scale(-1, 1);
         ctx.translate(-contentWidth, 0);
-        ctx.drawImage(video, 0, 0, contentWidth, contentWidth);
+        ctx.drawImage(video, 0, 0, contentWidth, contentHeight);
         ctx.restore();
 
-        poses.forEach(({ score, keypoints }) => {
-            drawWristPoint(keypoints[9],ctx);
-            drawWristPoint(keypoints[10],ctx);
-            ballsDecision(ctx,[keypoints[9],keypoints[10]]);
-        });
+	if (timeLimit % 10 == 0) {
+	    printLimit = timeLimit / 10;
+	}
+	ctx.font = fontLayout;
+	ctx.fillStyle = "blue";
+	ctx.fillText(printLimit, 670, 70);
+	ctx.fill();
 
+	if (timeLimit == 0) {
+	    ctx.font = fontLayout;
+	    ctx.fillStyle = "red";
+	    ctx.fillText("TIME UP", 300, 300);
+	    ctx.fill();
+	} else {
+            poses.forEach(({ s, keypoints }) => {
+		drawNaviko(keypoints[0],keypoints[1],ctx);
+		drawWristPoint(keypoints[9],ctx);
+		drawWristPoint(keypoints[10],ctx);
+		ballsDecision(ctx,[keypoints[9],keypoints[10]]);
+            });
+	}
+
+	ctx.font = fontLayout;
+	ctx.fillStyle = "red";
+	ctx.fillText(score, 70, 70);
+	ctx.fill();
+	timeLimit -= 1;
+	if(timeLimit <= 0){
+	    timeLimit = 0;
+	}
 
         stats.end();
 
@@ -111,26 +143,33 @@ function drawWristPoint(wrist,ctx){
     ctx.fill();
 }
 
+function drawNaviko(nose, leye, ctx){
+    navScale = (leye.position.x - nose.position.x - 50) / 20;
+    if (navScale < 1) navScale = 1;
+    let nw = naviko.width * navScale;
+    let nh = naviko.height * navScale;
+    ctx.drawImage(naviko,nose.position.x - nh / 2 , nose.position.y - nh / 1.5, nw, nh);
+}
+
 function ballsDecision(ctx,wrists){
     for(i=0;i<ballNum;i++){
-        wrists.forEach((wrist) => {
-            if((balls[i].x - 50)  <= wrist.position.x && wrist.position.x <= (balls[i].x + 50) &&
-               (balls[i].y - 50) <= wrist.position.y && wrist.position.y <= (balls[i].y + 50)){
-                balls[i] = resetBall();
-                return;
-            } else {
-                balls[i].y += 20;
-                if (balls[i].y > contentHeight) {
-                    balls[i] = resetBall();
-                    return;
-                }  else {
-                    ctx.beginPath();
-                    ctx.arc(balls[i].x , balls[i].y, 25, 0, 2 * Math.PI);
-                    ctx.fillStyle = balls[i].color
-                    ctx.fill();
-                }
-            }
-        });
+        balls[i].y += 30;
+        if (balls[i].y > contentHeight) {
+            balls[i] = resetBall();
+            return;
+        }  else {
+	    wrists.forEach((wrist) => {
+		if((balls[i].x - 50)  <= wrist.position.x && wrist.position.x <= (balls[i].x + 50) &&
+		   (balls[i].y - 50) <= wrist.position.y && wrist.position.y <= (balls[i].y + 50)){
+		    score += 10;
+		    balls[i] = resetBall();
+		}
+	    });
+	    ctx.beginPath();
+            ctx.arc(balls[i].x , balls[i].y, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = balls[i].color
+            ctx.fill();
+        }
     }
 }
 
